@@ -4,6 +4,10 @@ CBDownloader is a modern, lightweight Windows application designed to simplify d
 
 ![CBDownloader Cover](CBDownloader/Assets/cover.png)
 
+## 🖥️ Preview
+
+![CBDownloader UI](CBDownloader/Assets/UI.png)
+
 ## ✨ Features
 
 - **📋 Smart Clipboard Monitoring**: Automatically detects YouTube URLs when you copy them.
@@ -18,8 +22,7 @@ CBDownloader is a modern, lightweight Windows application designed to simplify d
 
 ### Prerequisites
 
-- Windows 10/11
-- [.NET 8.0 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
+- Windows 10 or 11 (64-bit)
 
 ### Installation
 
