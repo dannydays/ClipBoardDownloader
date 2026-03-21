@@ -46,6 +46,3 @@ CBDownloader is a modern, lightweight Windows application designed to simplify d
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-Created by **[dannydays](https://github.com/dannydays)**
