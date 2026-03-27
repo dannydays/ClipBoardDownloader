@@ -21,7 +21,7 @@ namespace CBDownloader.Services
         private const int WM_CLIPBOARDUPDATE = 0x031D;
         private IntPtr _windowHandle;
         
-        public event EventHandler<string>? ClipboardYoutubeUrlCopied;
+        public event EventHandler<string>? ClipboardUrlCopied;
         private uint _lastSequenceNumber = 0;
         private DateTime _lastFiredTime = DateTime.MinValue;
 
@@ -60,13 +60,13 @@ namespace CBDownloader.Services
                     if (System.Windows.Clipboard.ContainsText())
                     {
                         var text = System.Windows.Clipboard.GetText();
-                        if (CBDownloader.Utils.RegexHelper.IsValidYoutubeUrl(text))
+                        if (CBDownloader.Utils.RegexHelper.IsValidSupportedUrl(text))
                         {
                             if ((DateTime.Now - _lastFiredTime).TotalMilliseconds < 500)
                                 return IntPtr.Zero;
                                 
                             _lastFiredTime = DateTime.Now;
-                            ClipboardYoutubeUrlCopied?.Invoke(this, text);
+                            ClipboardUrlCopied?.Invoke(this, text);
                         }
                     }
                 }

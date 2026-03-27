@@ -59,7 +59,7 @@ namespace CBDownloader
             SetupNotifyIcon();
 
             _clipboardMonitor = new ClipboardMonitorService();
-            _clipboardMonitor.ClipboardYoutubeUrlCopied += async (s, url) =>
+            _clipboardMonitor.ClipboardUrlCopied += async (s, url) =>
             {
                 if (_mainViewModel != null && (_mainViewModel.IsBusy || _mainViewModel.IsDownloading))
                 {
