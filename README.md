@@ -1,6 +1,6 @@
 # CBDownloader 📥
 
-CBDownloader is a modern, lightweight Windows application designed to simplify downloading videos and audio from YouTube. It automatically monitors your clipboard and triggers when a valid YouTube link is copied, providing a seamless download experience.
+CBDownloader is a modern, lightweight Windows application designed to simplify downloading videos and audio from YouTube and Instagram. It automatically monitors your clipboard and triggers when a valid supported link is copied, providing a seamless download experience.
 
 ![CBDownloader Cover](CBDownloader/Assets/cover.png)
 
@@ -10,7 +10,7 @@ CBDownloader is a modern, lightweight Windows application designed to simplify d
 
 ## ✨ Features
 
-- **📋 Smart Clipboard Monitoring**: Automatically detects YouTube URLs when you copy them.
+- **📋 Smart Clipboard Monitoring**: Automatically detects YouTube and Instagram URLs when you copy them.
 - **🖼️ Video & Audio Support**: Download high-quality video (MP4) or extract audio (MP3) with one click.
 - **⚡ Supercharged Downloads**: Optimized download speeds using concurrent fragment loading.
 - **🔄 Auto-Updates**: One-click check to ensure you're always using the latest version.
