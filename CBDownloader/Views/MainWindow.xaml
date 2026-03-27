@@ -1,7 +1,7 @@
 <Window x:Class="CBDownloader.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="CB Downloader" Width="450" SizeToContent="Height"
+        Title="CBDownloader" Width="450" SizeToContent="Height"
         ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
         Icon="/Assets/icon.png"
         Topmost="True">

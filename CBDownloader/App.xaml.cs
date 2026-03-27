@@ -105,7 +105,7 @@ namespace CBDownloader
             }
 
             _notifyIcon.Visible = true;
-            _notifyIcon.Text = "CB Downloader";
+            _notifyIcon.Text = "CBDownloader";
             _notifyIcon.DoubleClick += (s, args) =>
             {
                 _mainWindow?.Show();
