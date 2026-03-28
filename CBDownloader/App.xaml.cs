@@ -136,20 +136,23 @@ namespace CBDownloader
         private SettingsWindow? _settingsWindow;
         internal void ShowSettings()
         {
-            if (_settingsWindow != null)
+            Dispatcher.Invoke(() => 
             {
-                _settingsWindow.Activate();
-                return;
-            }
+                if (_settingsWindow != null)
+                {
+                    _settingsWindow.Activate();
+                    return;
+                }
 
-            _settingsWindow = new SettingsWindow
-            {
-                Owner = _mainWindow,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            };
-            
-            _settingsWindow.Closed += (s, e) => _settingsWindow = null;
-            _settingsWindow.ShowDialog();
+                _settingsWindow = new SettingsWindow
+                {
+                    Owner = _mainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+                
+                _settingsWindow.Closed += (s, e) => _settingsWindow = null;
+                _settingsWindow.ShowDialog();
+            });
         }
 
         protected override void OnExit(ExitEventArgs e)
