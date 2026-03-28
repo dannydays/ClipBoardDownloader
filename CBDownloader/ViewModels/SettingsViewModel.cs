@@ -42,7 +42,7 @@ namespace CBDownloader.ViewModels
         [ObservableProperty]
         private bool _alwaysOnTop;
 
-        public ObservableCollection<string> AvailableBrowsers { get; } = new ObservableCollection<string> { "edge", "chrome", "firefox", "brave", "opera", "vivaldi" };
+        public ObservableCollection<string> AvailableBrowsers { get; } = new ObservableCollection<string> { "edge", "chrome", "firefox", "opera", "opera:gx", "brave", "vivaldi" };
         public ObservableCollection<string> AvailableThemes { get; } = new ObservableCollection<string> { "System", "Light", "Dark" };
 
         public SettingsViewModel()

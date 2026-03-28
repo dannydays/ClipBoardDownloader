@@ -39,6 +39,7 @@ namespace CBDownloader.ViewModels
 
         public async Task InitializeAndFetchMetadata(string url)
         {
+            url = Utils.RegexHelper.EnsureProtocol(url);
             VideoUrl = url;
             VideoTitle = "Fetching video information...";
             VideoThumbnailUrl = string.Empty;

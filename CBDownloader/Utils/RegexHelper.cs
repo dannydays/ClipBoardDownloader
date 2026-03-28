@@ -9,13 +9,24 @@ namespace CBDownloader.Utils
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex InstagramUrlRegex = new Regex(
-            @"(?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reel|tv)\/([^\/?#&]+)",
+            @"(?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reels?|tv|stories)\/([^\/?#&]+)",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static bool IsValidSupportedUrl(string url)
         {
             if (string.IsNullOrWhiteSpace(url)) return false;
             return YoutubeUrlRegex.IsMatch(url) || InstagramUrlRegex.IsMatch(url);
+        }
+
+        public static string EnsureProtocol(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return url;
+            if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && 
+                !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                return "https://" + url;
+            }
+            return url;
         }
 
         public static string ExtractVideoId(string url)

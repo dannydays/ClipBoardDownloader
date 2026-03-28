@@ -62,18 +62,42 @@ namespace CBDownloader.Services
 
             _ytdl.OutputFolder = finalOutputFolder;
 
+            // Strategy: First try without cookies, if fails and cookies are enabled, try with cookies.
             var options = new OptionSet();
+            if (accelerate) options.ConcurrentFragments = 4;
             
-            if (CBDownloader.Services.SettingsService.Current.UseBrowserCookies)
+            if (!isVideo)
             {
-                options.AddCustomOption("--cookies-from-browser", CBDownloader.Services.SettingsService.Current.BrowserForCookies);
-            }
-            
-            if (accelerate)
-            {
-                options.ConcurrentFragments = 4;
+                options.ExtractAudio = true;
+                options.AudioFormat = AudioConversionFormat.Mp3;
+                options.AudioQuality = 0;
             }
 
+            // Attempt 1: Anonymous (No cookies)
+            var result = await RunDownloadWithRetry(url, isVideo, options, progress, ct);
+            
+            // Attempt 2: With cookies if enabled and first attempt failed
+            if (!result.Success && CBDownloader.Services.SettingsService.Current.UseBrowserCookies)
+            {
+                var cookieOptions = new OptionSet();
+                if (accelerate) cookieOptions.ConcurrentFragments = 4;
+                cookieOptions.AddCustomOption("--cookies-from-browser", CBDownloader.Services.SettingsService.Current.BrowserForCookies);
+                
+                if (!isVideo)
+                {
+                    cookieOptions.ExtractAudio = true;
+                    cookieOptions.AudioFormat = AudioConversionFormat.Mp3;
+                    cookieOptions.AudioQuality = 0;
+                }
+
+                result = await RunDownloadWithRetry(url, isVideo, cookieOptions, progress, ct);
+            }
+
+            return result;
+        }
+
+        private async Task<RunResult<string>> RunDownloadWithRetry(string url, bool isVideo, OptionSet options, IProgress<DownloadProgress> progress, CancellationToken ct)
+        {
             if (isVideo)
             {
                 return await _ytdl.RunVideoDownload(url, format: "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
@@ -81,10 +105,6 @@ namespace CBDownloader.Services
             }
             else
             {
-                options.ExtractAudio = true;
-                options.AudioFormat = AudioConversionFormat.Mp3;
-                options.AudioQuality = 0;
-                
                 return await _ytdl.RunAudioDownload(url, AudioConversionFormat.Mp3, overrideOptions: options, progress: progress, ct: ct);
             }
         }
