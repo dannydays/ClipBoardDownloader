@@ -53,7 +53,8 @@ namespace CBDownloader
             _mainViewModel = new MainViewModel();
             _mainWindow = new MainWindow
             {
-                DataContext = _mainViewModel
+                DataContext = _mainViewModel,
+                Topmost = SettingsService.Current.AlwaysOnTop
             };
 
             ThemeManager.Initialize();
@@ -131,6 +132,14 @@ namespace CBDownloader
             });
 
             _notifyIcon.ContextMenuStrip = contextMenu;
+        }
+
+        internal void ShowNotification(string title, string message)
+        {
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.ShowBalloonTip(3000, title, message, Forms.ToolTipIcon.Info);
+            }
         }
 
         private SettingsWindow? _settingsWindow;

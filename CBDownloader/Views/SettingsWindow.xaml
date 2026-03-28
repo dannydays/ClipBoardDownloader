@@ -22,7 +22,8 @@
                 <Button Grid.Column="1" Content="..." Width="35" Height="30" Margin="5,0,0,0" Command="{Binding BrowseFolderCommand}"/>
             </Grid>
 
-            <CheckBox IsChecked="{Binding StartWithWindows}" Content="Start with Windows" Margin="0,0,0,15" VerticalContentAlignment="Center"/>
+            <CheckBox IsChecked="{Binding StartWithWindows}" Content="Start with Windows" Margin="0,0,0,10" VerticalContentAlignment="Center"/>
+            <CheckBox IsChecked="{Binding AlwaysOnTop}" Content="Keep on top of other windows" Margin="0,0,0,15" VerticalContentAlignment="Center"/>
 
             <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,15">
                 <StackPanel>

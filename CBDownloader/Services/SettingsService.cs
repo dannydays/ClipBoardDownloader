@@ -10,6 +10,7 @@ namespace CBDownloader.Services
         public bool UseBrowserCookies { get; set; } = false;
         public string BrowserForCookies { get; set; } = "edge";
         public string AppTheme { get; set; } = "System";
+        public bool AlwaysOnTop { get; set; } = true;
     }
 
     public static class SettingsService

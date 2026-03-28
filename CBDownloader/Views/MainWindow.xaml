@@ -4,7 +4,7 @@
         Title="CBDownloader" Width="500" Height="600"
         ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen"
         Icon="/Assets/icon.ico"
-        Topmost="True" Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}">
     
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>

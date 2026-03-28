@@ -38,6 +38,9 @@ namespace CBDownloader.ViewModels
 
         [ObservableProperty]
         private string _appTheme;
+        
+        [ObservableProperty]
+        private bool _alwaysOnTop;
 
         public ObservableCollection<string> AvailableBrowsers { get; } = new ObservableCollection<string> { "edge", "chrome", "firefox", "brave", "opera", "vivaldi" };
         public ObservableCollection<string> AvailableThemes { get; } = new ObservableCollection<string> { "System", "Light", "Dark" };
@@ -52,6 +55,19 @@ namespace CBDownloader.ViewModels
             UseBrowserCookies = SettingsService.Current.UseBrowserCookies;
             BrowserForCookies = SettingsService.Current.BrowserForCookies;
             AppTheme = SettingsService.Current.AppTheme;
+            AlwaysOnTop = SettingsService.Current.AlwaysOnTop;
+        }
+
+        partial void OnAlwaysOnTopChanged(bool value)
+        {
+            SettingsService.Current.AlwaysOnTop = value;
+            SettingsService.Save();
+            
+            // Apply immediately to current instance
+            if (System.Windows.Application.Current.MainWindow != null)
+            {
+                System.Windows.Application.Current.MainWindow.Topmost = value;
+            }
         }
 
         partial void OnAppThemeChanged(string value)

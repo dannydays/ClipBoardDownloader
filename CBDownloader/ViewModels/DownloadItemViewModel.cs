@@ -98,6 +98,8 @@ namespace CBDownloader.ViewModels
                     DownloadStatus = "Completed!";
                     DownloadProgress = 100;
                     IsCompleted = true;
+                    
+                    ((App)System.Windows.Application.Current).ShowNotification("Download Completed!", VideoTitle);
                 }
                 else
                 {

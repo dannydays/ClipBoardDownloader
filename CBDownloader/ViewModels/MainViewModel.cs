@@ -30,6 +30,8 @@ namespace CBDownloader.ViewModels
         [NotifyCanExecuteChangedFor(nameof(DownloadAudioCommand))]
         private bool _isBusy;
 
+        public bool IsTopmost => SettingsService.Current.AlwaysOnTop;
+
         public MainViewModel()
         {
             _ytdlService = new YoutubeDLService();
