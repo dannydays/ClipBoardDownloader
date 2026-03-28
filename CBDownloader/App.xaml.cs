@@ -56,21 +56,23 @@ namespace CBDownloader
                 DataContext = _mainViewModel
             };
 
+            ThemeManager.Initialize();
+
             SetupNotifyIcon();
 
             _clipboardMonitor = new ClipboardMonitorService();
             _clipboardMonitor.ClipboardUrlCopied += async (s, url) =>
             {
-                if (_mainViewModel != null && (_mainViewModel.IsBusy || _mainViewModel.IsDownloading))
+                if (_mainViewModel != null && _mainViewModel.IsBusy)
                 {
                     return;
                 }
 
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
                 {
-                    _mainWindow.Show();
-                    _mainWindow.Activate();
-                    await _mainViewModel.InitializeAndFetchMetadata(url);
+                    _mainWindow?.Show();
+                    _mainWindow?.Activate();
+                    if (_mainViewModel != null) await _mainViewModel.InitializeAndFetchMetadata(url);
                 });
             };
 
@@ -132,14 +134,22 @@ namespace CBDownloader
         }
 
         private SettingsWindow? _settingsWindow;
-        private void ShowSettings()
+        internal void ShowSettings()
         {
-            if (_settingsWindow == null)
+            if (_settingsWindow != null)
             {
-                _settingsWindow = new SettingsWindow();
+                _settingsWindow.Activate();
+                return;
             }
-            _settingsWindow.Show();
-            _settingsWindow.Activate();
+
+            _settingsWindow = new SettingsWindow
+            {
+                Owner = _mainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            
+            _settingsWindow.Closed += (s, e) => _settingsWindow = null;
+            _settingsWindow.ShowDialog();
         }
 
         protected override void OnExit(ExitEventArgs e)

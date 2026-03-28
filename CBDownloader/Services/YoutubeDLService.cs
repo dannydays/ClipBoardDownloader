@@ -51,7 +51,7 @@ namespace CBDownloader.Services
 
         public async Task<RunResult<string>> DownloadAsync(string url, bool isVideo, bool accelerate, IProgress<DownloadProgress> progress, CancellationToken ct)
         {
-            var baseFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CBDownloader");
+            var baseFolder = CBDownloader.Services.SettingsService.Current.DownloadFolderPath;
             var subFolder = isVideo ? "Videos" : "Audios";
             var finalOutputFolder = Path.Combine(baseFolder, subFolder);
             
@@ -63,6 +63,11 @@ namespace CBDownloader.Services
             _ytdl.OutputFolder = finalOutputFolder;
 
             var options = new OptionSet();
+            
+            if (CBDownloader.Services.SettingsService.Current.UseBrowserCookies)
+            {
+                options.AddCustomOption("--cookies-from-browser", CBDownloader.Services.SettingsService.Current.BrowserForCookies);
+            }
             
             if (accelerate)
             {

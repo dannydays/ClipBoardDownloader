@@ -11,10 +11,6 @@ namespace CBDownloader.Views
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            if (DataContext is CBDownloader.ViewModels.MainViewModel viewModel)
-            {
-                viewModel.CancelDownload();
-            }
             e.Cancel = true;
             this.Hide();
         }
