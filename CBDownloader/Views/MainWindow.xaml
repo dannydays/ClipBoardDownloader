@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="CBDownloader" Width="450" SizeToContent="Height"
         ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
-        Icon="/Assets/icon.png"
+        Icon="/Assets/icon.ico"
         Topmost="True">
     <Grid Margin="15">
         <Grid.RowDefinitions>

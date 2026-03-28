@@ -4,7 +4,7 @@
         Title="Settings" SizeToContent="Height" MinHeight="250" Width="350"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Icon="/Assets/icon.png"
+        Icon="/Assets/icon.ico"
         Topmost="True">
     <StackPanel Margin="20">
         <TextBlock Text="Settings" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
