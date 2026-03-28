@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Collections.ObjectModel;
 using CBDownloader.Services;
 using YoutubeDLSharp;
 
@@ -12,7 +13,8 @@ namespace CBDownloader.ViewModels
     public partial class MainViewModel : ObservableObject
     {
         private readonly YoutubeDLService _ytdlService;
-        private CancellationTokenSource? _cts;
+
+        public ObservableCollection<DownloadItemViewModel> Downloads { get; } = new ObservableCollection<DownloadItemViewModel>();
 
         [ObservableProperty]
         private string _videoUrl = string.Empty;
@@ -28,16 +30,7 @@ namespace CBDownloader.ViewModels
         [NotifyCanExecuteChangedFor(nameof(DownloadAudioCommand))]
         private bool _isBusy;
 
-        [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(DownloadVideoCommand))]
-        [NotifyCanExecuteChangedFor(nameof(DownloadAudioCommand))]
-        private bool _isDownloading;
-
-        [ObservableProperty]
-        private double _downloadProgress;
-
-        [ObservableProperty]
-        private string _downloadStatus = string.Empty;
+        public bool IsTopmost => SettingsService.Current.AlwaysOnTop;
 
         public MainViewModel()
         {
@@ -50,8 +43,6 @@ namespace CBDownloader.ViewModels
             VideoTitle = "Fetching video information...";
             VideoThumbnailUrl = string.Empty;
             IsBusy = true;
-            DownloadStatus = string.Empty;
-            DownloadProgress = 0;
 
             try
             {
@@ -60,10 +51,9 @@ namespace CBDownloader.ViewModels
                 VideoTitle = metadata.Title;
                 VideoThumbnailUrl = metadata.Thumbnail;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                VideoTitle = "Error fetching metadata.";
-                DownloadStatus = ex.Message;
+                VideoTitle = "Ready for links (Instagram/YouTube)";
             }
             finally
             {
@@ -71,153 +61,72 @@ namespace CBDownloader.ViewModels
             }
         }
 
-        private bool CanDownload() => !IsBusy && !IsDownloading && !string.IsNullOrWhiteSpace(VideoUrl) && !VideoTitle.Contains("Error");
+        private bool CanDownload() => !IsBusy && !string.IsNullOrWhiteSpace(VideoUrl) && !VideoTitle.Contains("error", StringComparison.OrdinalIgnoreCase);
 
         [RelayCommand(CanExecute = nameof(CanDownload))]
-        private async Task DownloadVideoAsync() => await DownloadInternalAsync(true);
+        private void DownloadVideo() => AddDownloadToQueue(true);
 
         [RelayCommand(CanExecute = nameof(CanDownload))]
-        private async Task DownloadAudioAsync() => await DownloadInternalAsync(false);
+        private void DownloadAudio() => AddDownloadToQueue(false);
 
-        private bool _isPostProcessing;
-
-        private async Task DownloadInternalAsync(bool isVideo)
+        private void AddDownloadToQueue(bool isVideo)
         {
-            if (string.IsNullOrWhiteSpace(VideoUrl) || IsDownloading || IsBusy) return;
+            if (string.IsNullOrWhiteSpace(VideoUrl) || IsBusy) return;
 
-            IsDownloading = true;
-            _isPostProcessing = false;
-            DownloadStatus = "Starting download...";
-            DownloadProgress = 0;
-            _cts = new CancellationTokenSource();
+            var newItem = new DownloadItemViewModel(_ytdlService)
+            {
+                VideoTitle = this.VideoTitle,
+                VideoThumbnailUrl = this.VideoThumbnailUrl,
+                VideoUrl = this.VideoUrl,
+                IsVideo = isVideo
+            };
 
-            var progress = new Progress<DownloadProgress>(p =>
-            {
-                var stateStr = p.State.ToString();
-                if (stateStr == "Downloading" && !_isPostProcessing)
-                {
-                    var prc = p.Progress * 100;
-                    if (prc >= DownloadProgress)
-                    {
-                        DownloadProgress = prc > 100 ? 100 : prc;
-                    }
-                    
-                    if (DownloadProgress >= 100)
-                    {
-                        _isPostProcessing = true;
-                        DownloadProgress = 99;
-                        DownloadStatus = "Converting media (please wait)... 99.9%";
-                    }
-                    else
-                    {
-                        DownloadStatus = $"Downloading... {DownloadProgress:F1}% ({p.DownloadSpeed})";
-                    }
-                }
-                else if (stateStr == "PostProcessing")
-                {
-                    if (!_isPostProcessing)
-                    {
-                        _isPostProcessing = true;
-                        DownloadProgress = 99;
-                        DownloadStatus = "Converting media (please wait)... 99.0%";
-                    }
-                }
-            });
+            Downloads.Add(newItem);
+            
+            // Start download without awaiting to avoid blocking UI
+            _ = newItem.StartDownloadAsync();
 
-            try
-            {
-                var result = await _ytdlService.DownloadAsync(VideoUrl, isVideo, true, progress, _cts.Token);
-                _isPostProcessing = false;
-                
-                if (result.Success)
-                {
-                    DownloadStatus = "Download completed successfully!";
-                    DownloadProgress = 100;
-
-                    if (!string.IsNullOrEmpty(result.Data))
-                    {
-                        var destFolder = System.IO.Path.GetDirectoryName(result.Data);
-                        if (!string.IsNullOrEmpty(destFolder))
-                        {
-                            bool isAlreadyOpen = false;
-                            try
-                            {
-                                Type? shellType = Type.GetTypeFromProgID("Shell.Application");
-                                if (shellType != null)
-                                {
-                                    dynamic shell = Activator.CreateInstance(shellType)!;
-                                    foreach (dynamic win in shell.Windows())
-                                    {
-                                        try
-                                        {
-                                            string url = win.LocationURL;
-                                            if (!string.IsNullOrEmpty(url) && url.StartsWith("file:///"))
-                                            {
-                                                string localPath = new Uri(url).LocalPath;
-                                                if (string.Equals(localPath.TrimEnd('\\'), destFolder.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase))
-                                                {
-                                                    isAlreadyOpen = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        catch { }
-                                    }
-                                }
-                            }
-                            catch { }
-
-                            if (!isAlreadyOpen)
-                            {
-                                var startInfo = new System.Diagnostics.ProcessStartInfo
-                                {
-                                    FileName = "explorer.exe",
-                                    Arguments = $"\"{destFolder}\"",
-                                    WindowStyle = System.Diagnostics.ProcessWindowStyle.Maximized,
-                                    UseShellExecute = true
-                                };
-                                System.Diagnostics.Process.Start(startInfo);
-                            }
-                        }
-                    }
-                    
-                    System.Windows.Application.Current.MainWindow?.Hide();
-                }
-                else
-                {
-                    DownloadStatus = $"Error: {string.Join(" ", result.ErrorOutput)}";
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                _isPostProcessing = false;
-                DownloadStatus = "Download cancelled.";
-            }
-            catch (Exception ex)
-            {
-                _isPostProcessing = false;
-                DownloadStatus = $"Unexpected error: {ex.Message}";
-            }
-            finally
-            {
-                _isPostProcessing = false;
-                IsDownloading = false;
-            }
+            ClearPreview();
         }
 
-        public void CancelDownload()
+        private void ClearPreview()
         {
-            if (IsDownloading)
-            {
-                _cts?.Cancel();
-            }
+            VideoUrl = string.Empty;
+            VideoTitle = "Waiting for link...";
+            VideoThumbnailUrl = string.Empty;
         }
 
         [RelayCommand]
         private void Exit()
         {
-            CancelDownload();
+            foreach (var dl in Downloads)
+            {
+                if (dl.IsDownloading) dl.CancelCommand.Execute(null);
+            }
             System.Windows.Application.Current.MainWindow?.Hide();
+        }
+
+        [RelayCommand]
+        private void ClearCompleted()
+        {
+            var itemsToRemove = new System.Collections.Generic.List<DownloadItemViewModel>();
+            foreach(var item in Downloads)
+            {
+                if(!item.IsDownloading && (item.IsCompleted || item.DownloadStatus.Contains("Error") || item.DownloadStatus == "Cancelled."))
+                {
+                    itemsToRemove.Add(item);
+                }
+            }
+            foreach(var item in itemsToRemove)
+            {
+                Downloads.Remove(item);
+            }
+        }
+
+        [RelayCommand]
+        private void OpenSettings()
+        {
+            ((App)System.Windows.Application.Current).ShowSettings();
         }
     }
 }

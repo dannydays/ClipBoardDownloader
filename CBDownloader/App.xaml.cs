@@ -53,24 +53,27 @@ namespace CBDownloader
             _mainViewModel = new MainViewModel();
             _mainWindow = new MainWindow
             {
-                DataContext = _mainViewModel
+                DataContext = _mainViewModel,
+                Topmost = SettingsService.Current.AlwaysOnTop
             };
+
+            ThemeManager.Initialize();
 
             SetupNotifyIcon();
 
             _clipboardMonitor = new ClipboardMonitorService();
-            _clipboardMonitor.ClipboardYoutubeUrlCopied += async (s, url) =>
+            _clipboardMonitor.ClipboardUrlCopied += async (s, url) =>
             {
-                if (_mainViewModel != null && (_mainViewModel.IsBusy || _mainViewModel.IsDownloading))
+                if (_mainViewModel != null && _mainViewModel.IsBusy)
                 {
                     return;
                 }
 
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
                 {
-                    _mainWindow.Show();
-                    _mainWindow.Activate();
-                    await _mainViewModel.InitializeAndFetchMetadata(url);
+                    _mainWindow?.Show();
+                    _mainWindow?.Activate();
+                    if (_mainViewModel != null) await _mainViewModel.InitializeAndFetchMetadata(url);
                 });
             };
 
@@ -105,7 +108,7 @@ namespace CBDownloader
             }
 
             _notifyIcon.Visible = true;
-            _notifyIcon.Text = "CB Downloader";
+            _notifyIcon.Text = "CBDownloader";
             _notifyIcon.DoubleClick += (s, args) =>
             {
                 _mainWindow?.Show();
@@ -131,15 +134,34 @@ namespace CBDownloader
             _notifyIcon.ContextMenuStrip = contextMenu;
         }
 
-        private SettingsWindow? _settingsWindow;
-        private void ShowSettings()
+        internal void ShowNotification(string title, string message)
         {
-            if (_settingsWindow == null)
+            if (_notifyIcon != null)
             {
-                _settingsWindow = new SettingsWindow();
+                _notifyIcon.ShowBalloonTip(3000, title, message, Forms.ToolTipIcon.Info);
             }
-            _settingsWindow.Show();
-            _settingsWindow.Activate();
+        }
+
+        private SettingsWindow? _settingsWindow;
+        internal void ShowSettings()
+        {
+            Dispatcher.Invoke(() => 
+            {
+                if (_settingsWindow != null)
+                {
+                    _settingsWindow.Activate();
+                    return;
+                }
+
+                _settingsWindow = new SettingsWindow
+                {
+                    Owner = _mainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+                
+                _settingsWindow.Closed += (s, e) => _settingsWindow = null;
+                _settingsWindow.ShowDialog();
+            });
         }
 
         protected override void OnExit(ExitEventArgs e)

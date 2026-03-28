@@ -7,6 +7,9 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
+using CBDownloader.Services;
+using WinForms = System.Windows.Forms;
 
 namespace CBDownloader.ViewModels
 {
@@ -24,11 +27,86 @@ namespace CBDownloader.ViewModels
         [ObservableProperty]
         private string _currentVersion;
 
+        [ObservableProperty]
+        private string _downloadFolderPath;
+
+        [ObservableProperty]
+        private bool _useBrowserCookies;
+
+        [ObservableProperty]
+        private string _browserForCookies;
+
+        [ObservableProperty]
+        private string _appTheme;
+        
+        [ObservableProperty]
+        private bool _alwaysOnTop;
+
+        public ObservableCollection<string> AvailableBrowsers { get; } = new ObservableCollection<string> { "edge", "chrome", "firefox", "brave", "opera", "vivaldi" };
+        public ObservableCollection<string> AvailableThemes { get; } = new ObservableCollection<string> { "System", "Light", "Dark" };
+
         public SettingsViewModel()
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             CurrentVersion = $"v{version?.Major}.{version?.Minor}.{version?.Build}";
             StartWithWindows = CheckIfAutoStartEnabled();
+
+            DownloadFolderPath = SettingsService.Current.DownloadFolderPath;
+            UseBrowserCookies = SettingsService.Current.UseBrowserCookies;
+            BrowserForCookies = SettingsService.Current.BrowserForCookies;
+            AppTheme = SettingsService.Current.AppTheme;
+            AlwaysOnTop = SettingsService.Current.AlwaysOnTop;
+        }
+
+        partial void OnAlwaysOnTopChanged(bool value)
+        {
+            SettingsService.Current.AlwaysOnTop = value;
+            SettingsService.Save();
+            
+            // Apply immediately to current instance
+            if (System.Windows.Application.Current.MainWindow != null)
+            {
+                System.Windows.Application.Current.MainWindow.Topmost = value;
+            }
+        }
+
+        partial void OnAppThemeChanged(string value)
+        {
+            SettingsService.Current.AppTheme = value;
+            SettingsService.Save();
+            ThemeManager.ApplyTheme(value);
+        }
+
+        partial void OnDownloadFolderPathChanged(string value)
+        {
+            SettingsService.Current.DownloadFolderPath = value;
+            SettingsService.Save();
+        }
+
+        partial void OnUseBrowserCookiesChanged(bool value)
+        {
+            SettingsService.Current.UseBrowserCookies = value;
+            SettingsService.Save();
+        }
+
+        partial void OnBrowserForCookiesChanged(string value)
+        {
+            SettingsService.Current.BrowserForCookies = value;
+            SettingsService.Save();
+        }
+
+        [RelayCommand]
+        private void BrowseFolder()
+        {
+            using var dialog = new WinForms.FolderBrowserDialog
+            {
+                Description = "Select Download Folder",
+                SelectedPath = DownloadFolderPath
+            };
+            if (dialog.ShowDialog() == WinForms.DialogResult.OK)
+            {
+                DownloadFolderPath = dialog.SelectedPath;
+            }
         }
 
         partial void OnStartWithWindowsChanged(bool value)

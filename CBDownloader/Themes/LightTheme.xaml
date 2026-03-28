@@ -1,0 +1,24 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <Color x:Key="WindowBackgroundColor">#FFFFFF</Color>
+    <Color x:Key="WindowForegroundColor">#000000</Color>
+    <Color x:Key="SecondaryForegroundColor">#666666</Color>
+    <Color x:Key="BorderColor">#CCCCCC</Color>
+    <Color x:Key="ProgressBarBackgroundColor">#EEEEEE</Color>
+    <Color x:Key="ThumbnailOverlayColor">#CC000000</Color>
+    <Color x:Key="ItemBackgroundColor">#FAFAFA</Color>
+    
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource WindowBackgroundColor}"/>
+    <SolidColorBrush x:Key="WindowForegroundBrush" Color="{StaticResource WindowForegroundColor}"/>
+    <SolidColorBrush x:Key="SecondaryForegroundBrush" Color="{StaticResource SecondaryForegroundColor}"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+    <SolidColorBrush x:Key="ProgressBarBackgroundBrush" Color="{StaticResource ProgressBarBackgroundColor}"/>
+    <SolidColorBrush x:Key="ThumbnailOverlayBrush" Color="{StaticResource ThumbnailOverlayColor}"/>
+    <SolidColorBrush x:Key="ItemBackgroundBrush" Color="{StaticResource ItemBackgroundColor}"/>
+
+    <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#E1E1E1"/>
+    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ButtonHoverBackgroundBrush" Color="#D5D5D5"/>
+
+</ResourceDictionary>
