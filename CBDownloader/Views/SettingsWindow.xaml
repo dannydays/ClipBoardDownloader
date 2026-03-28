@@ -1,7 +1,7 @@
 <Window x:Class="CBDownloader.Views.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Settings" Width="380" Height="450"
+        Title="Settings" Width="380" Height="520"
         ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
         Icon="/Assets/icon.ico" Topmost="True"
         Background="{DynamicResource WindowBackgroundBrush}">
