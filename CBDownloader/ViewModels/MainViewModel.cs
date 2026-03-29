@@ -1,10 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
-using System.Threading;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Collections.ObjectModel;
+using CBDownloader.Models;
 using CBDownloader.Services;
 using YoutubeDLSharp;
 
@@ -74,20 +75,45 @@ namespace CBDownloader.ViewModels
         {
             if (string.IsNullOrWhiteSpace(VideoUrl) || IsBusy) return;
 
+            if (Utils.RegexHelper.IsYoutubePlaylistUrl(VideoUrl))
+            {
+                var result = System.Windows.MessageBox.Show(
+                    "This link is part of a playlist.\nDownload the full playlist?",
+                    "Playlist Detected",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    ((App)System.Windows.Application.Current).ShowPlaylistWindow(_ytdlService, VideoUrl, VideoTitle, isVideo);
+                    return;
+                }
+            }
+
+            EnqueueSingleItem(VideoTitle, VideoThumbnailUrl, VideoUrl, isVideo);
+        }
+
+        private void EnqueueSingleItem(string title, string thumbnailUrl, string url, bool isVideo, string? playlistName = null)
+        {
             var newItem = new DownloadItemViewModel(_ytdlService)
             {
-                VideoTitle = this.VideoTitle,
-                VideoThumbnailUrl = this.VideoThumbnailUrl,
-                VideoUrl = this.VideoUrl,
-                IsVideo = isVideo
+                VideoTitle = title,
+                VideoThumbnailUrl = thumbnailUrl,
+                VideoUrl = url,
+                IsVideo = isVideo,
+                PlaylistName = playlistName
             };
 
             Downloads.Add(newItem);
-            
-            // Start download without awaiting to avoid blocking UI
             _ = newItem.StartDownloadAsync();
+        }
 
-            ClearPreview();
+        public void AddPlaylistItemsToQueue(List<PlaylistItemModel> items, bool isVideo, string? playlistName = null)
+        {
+            foreach (var item in items)
+            {
+                EnqueueSingleItem(item.Title, item.ThumbnailUrl, item.VideoUrl, isVideo, playlistName);
+            }
         }
 
         private void ClearPreview()
@@ -110,15 +136,15 @@ namespace CBDownloader.ViewModels
         [RelayCommand]
         private void ClearCompleted()
         {
-            var itemsToRemove = new System.Collections.Generic.List<DownloadItemViewModel>();
-            foreach(var item in Downloads)
+            var itemsToRemove = new List<DownloadItemViewModel>();
+            foreach (var item in Downloads)
             {
-                if(!item.IsDownloading && (item.IsCompleted || item.DownloadStatus.Contains("Error") || item.DownloadStatus == "Cancelled."))
+                if (!item.IsDownloading && (item.IsCompleted || item.DownloadStatus.Contains("Error") || item.DownloadStatus == "Cancelled."))
                 {
                     itemsToRemove.Add(item);
                 }
             }
-            foreach(var item in itemsToRemove)
+            foreach (var item in itemsToRemove)
             {
                 Downloads.Remove(item);
             }

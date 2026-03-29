@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using CBDownloader.Models;
 using CBDownloader.Services;
 using CBDownloader.ViewModels;
 using CBDownloader.Views;
@@ -161,6 +162,53 @@ namespace CBDownloader
                 
                 _settingsWindow.Closed += (s, e) => _settingsWindow = null;
                 _settingsWindow.ShowDialog();
+            });
+        }
+
+        internal void ShowPlaylistWindow(YoutubeDLService ytdlService, string url, string playlistTitle, bool isVideo)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var vm = new PlaylistViewModel
+                {
+                    IsVideo = isVideo,
+                    PlaylistTitle = playlistTitle,
+                    IsLoading = true
+                };
+
+                var window = new PlaylistWindow
+                {
+                    DataContext = vm,
+                    Owner = _mainWindow,
+                    Title = isVideo ? "Queue Playlist Videos" : "Queue Playlist Audios"
+                };
+
+                vm.CloseAction = () => Dispatcher.Invoke(() => window.Close());
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var result = await ytdlService.GetPlaylistMetadataAsync(url);
+                        Dispatcher.Invoke(() => vm.LoadEntries(result.PlaylistTitle, result.Items));
+                    }
+                    catch (Exception ex)
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            vm.LoadingStatus = $"Error loading playlist: {ex.Message}";
+                        });
+                    }
+                });
+
+                window.ShowDialog();
+
+                if (vm.DownloadRequested && _mainViewModel != null)
+                {
+                    var selected = vm.GetSelectedItems();
+                    if (selected.Count > 0)
+                        _mainViewModel.AddPlaylistItemsToQueue(selected, isVideo, vm.PlaylistTitle);
+                }
             });
         }
 
