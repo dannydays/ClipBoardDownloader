@@ -1,6 +1,6 @@
 [Setup]
 AppName=CBDownloader
-AppVersion=1.2.0
+AppVersion=1.3.0
 DefaultDirName={autopf}\CBDownloader
 DefaultGroupName=CBDownloader
 UninstallDisplayIcon={app}\CBDownloader.exe
@@ -11,6 +11,11 @@ OutputDir=Output
 OutputBaseFilename=CBDownloaderInstaller
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
+VersionInfoVersion=1.3.0.0
+VersionInfoDescription=CBDownloader Installer
+VersionInfoCompany=ClipBoardDownloader
+VersionInfoCopyright=Copyright (C) 2026
+VersionInfoProductName=CBDownloader
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
