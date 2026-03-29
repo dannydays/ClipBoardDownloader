@@ -35,6 +35,7 @@ namespace CBDownloader.ViewModels
         private string _videoUrl = string.Empty;
 
         public bool IsVideo { get; set; }
+        public string? PlaylistName { get; set; }
         
         public string? FilePath { get; private set; }
 
@@ -89,7 +90,7 @@ namespace CBDownloader.ViewModels
 
             try
             {
-                var result = await _ytdlService.DownloadAsync(VideoUrl, IsVideo, true, progress, _cts.Token);
+                var result = await _ytdlService.DownloadAsync(VideoUrl, IsVideo, true, progress, _cts.Token, PlaylistName);
                 _isPostProcessing = false;
                 
                 if (result.Success)

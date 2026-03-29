@@ -8,6 +8,14 @@ namespace CBDownloader.Utils
             @"(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private static readonly Regex YoutubePlaylistUrlRegex = new Regex(
+            @"(?:https?:\/\/)?(?:www\.)?youtube\.com\/.*[?&]list=([^&\s]+)",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private static readonly Regex YoutubePurePlaylistUrlRegex = new Regex(
+            @"(?:https?:\/\/)?(?:www\.)?youtube\.com\/playlist\?.*list=([^&\s]+)",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         private static readonly Regex InstagramUrlRegex = new Regex(
             @"(?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reels?|tv|stories)\/([^\/?#&]+)",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -15,7 +23,13 @@ namespace CBDownloader.Utils
         public static bool IsValidSupportedUrl(string url)
         {
             if (string.IsNullOrWhiteSpace(url)) return false;
-            return YoutubeUrlRegex.IsMatch(url) || InstagramUrlRegex.IsMatch(url);
+            return YoutubeUrlRegex.IsMatch(url) || InstagramUrlRegex.IsMatch(url) || YoutubePurePlaylistUrlRegex.IsMatch(url);
+        }
+
+        public static bool IsYoutubePlaylistUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return false;
+            return YoutubePlaylistUrlRegex.IsMatch(url);
         }
 
         public static string EnsureProtocol(string url)

@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
+using CBDownloader.Models;
 
 namespace CBDownloader.Services
 {
@@ -49,12 +51,56 @@ namespace CBDownloader.Services
             throw new Exception($"Failed to fetch metadata: {string.Join("\n", res.ErrorOutput)}");
         }
 
-        public async Task<RunResult<string>> DownloadAsync(string url, bool isVideo, bool accelerate, IProgress<DownloadProgress> progress, CancellationToken ct)
+        public async Task<(string PlaylistTitle, List<PlaylistItemModel> Items)> GetPlaylistMetadataAsync(string url)
+        {
+            var options = new OptionSet { YesPlaylist = true };
+            var res = await _ytdl.RunVideoDataFetch(url, flat: true, overrideOptions: options);
+
+            if (!res.Success)
+                throw new Exception($"Failed to fetch playlist: {string.Join("\n", res.ErrorOutput)}");
+
+            var entries = res.Data?.Entries;
+            if (entries == null || entries.Length == 0)
+                throw new Exception("Playlist is empty or could not be parsed.");
+
+            var items = new List<PlaylistItemModel>();
+            for (int i = 0; i < entries.Length; i++)
+            {
+                var entry = entries[i];
+                var videoUrl = !string.IsNullOrEmpty(entry.WebpageUrl)
+                    ? entry.WebpageUrl
+                    : $"https://www.youtube.com/watch?v={entry.ID}";
+
+                long? durationSeconds = entry.Duration.HasValue ? (long?)Convert.ToInt64(entry.Duration.Value) : null;
+                string duration = durationSeconds.HasValue
+                    ? TimeSpan.FromSeconds(durationSeconds.Value).ToString(durationSeconds.Value >= 3600 ? @"h\:mm\:ss" : @"m\:ss")
+                    : string.Empty;
+
+                items.Add(new PlaylistItemModel
+                {
+                    Index = i + 1,
+                    Title = entry.Title ?? $"Video {i + 1}",
+                    VideoUrl = videoUrl,
+                    ThumbnailUrl = entry.Thumbnail ?? string.Empty,
+                    Duration = duration
+                });
+            }
+
+            return (res.Data?.Title ?? "Playlist", items);
+        }
+
+        public async Task<RunResult<string>> DownloadAsync(string url, bool isVideo, bool accelerate, IProgress<DownloadProgress> progress, CancellationToken ct, string? playlistName = null)
         {
             var baseFolder = CBDownloader.Services.SettingsService.Current.DownloadFolderPath;
             var subFolder = isVideo ? "Videos" : "Audios";
             var finalOutputFolder = Path.Combine(baseFolder, subFolder);
-            
+
+            if (!string.IsNullOrWhiteSpace(playlistName))
+            {
+                var safeName = string.Join("_", playlistName.Split(Path.GetInvalidFileNameChars()));
+                finalOutputFolder = Path.Combine(finalOutputFolder, safeName);
+            }
+
             if (!Directory.Exists(finalOutputFolder))
             {
                 Directory.CreateDirectory(finalOutputFolder);
