@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using CBDownloader.Services;
 using WinForms = System.Windows.Forms;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CBDownloader.ViewModels
 {
@@ -155,8 +158,26 @@ namespace CBDownloader.ViewModels
                     {
                         if (result.tag_name != CurrentVersion)
                         {
-                            UpdateStatus = $"Update available: {result.tag_name}! Opening browser...";
-                            OpenBrowser(result.html_url);
+                            UpdateStatus = $"Update available: {result.tag_name}!";
+                            var asset = result.assets.FirstOrDefault(a => a.name.EndsWith(".exe"));
+                            if (asset != null)
+                            {
+                                var confirm = System.Windows.MessageBox.Show(
+                                    $"A new version ({result.tag_name}) is available. Wish to update now?",
+                                    "Update Available",
+                                    System.Windows.MessageBoxButton.YesNo,
+                                    System.Windows.MessageBoxImage.Question);
+
+                                if (confirm == System.Windows.MessageBoxResult.Yes)
+                                {
+                                    await DownloadAndInstallUpdate(asset.browser_download_url, asset.name);
+                                }
+                            }
+                            else
+                            {
+                                // Fallback to opening browser if no EXE found
+                                OpenBrowser(result.html_url);
+                            }
                         }
                         else
                         {
@@ -180,6 +201,57 @@ namespace CBDownloader.ViewModels
             catch (Exception ex)
             {
                 UpdateStatus = $"Error: {ex.Message}";
+            }
+        }
+
+        private async Task DownloadAndInstallUpdate(string url, string fileName)
+        {
+            try
+            {
+                var tempPath = Path.Combine(Path.GetTempPath(), fileName);
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("User-Agent", "ClipBoardDownloader-App");
+
+                using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                response.EnsureSuccessStatusCode();
+
+                var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+                var canReportProgress = totalBytes != -1;
+
+                using var contentStream = await response.Content.ReadAsStreamAsync();
+                using var fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+
+                var buffer = new byte[8192];
+                var totalRead = 0L;
+                int bytesRead;
+
+                while ((bytesRead = await contentStream.ReadAsync(buffer)) > 0)
+                {
+                    await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
+                    totalRead += bytesRead;
+
+                    if (canReportProgress)
+                    {
+                        int progress = (int)((totalRead * 100) / totalBytes);
+                        UpdateStatus = $"Downloading: {progress}%";
+                    }
+                }
+                
+                fileStream.Close();
+
+                UpdateStatus = "Finalizing update...";
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = tempPath,
+                    Arguments = "/SILENT",
+                    UseShellExecute = true
+                });
+
+                System.Windows.Application.Current.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus = $"Failed to download update: {ex.Message}";
             }
         }
 
@@ -214,6 +286,13 @@ namespace CBDownloader.ViewModels
         {
             public string tag_name { get; set; } = string.Empty;
             public string html_url { get; set; } = string.Empty;
+            public List<GitHubAsset> assets { get; set; } = new();
+        }
+
+        private class GitHubAsset
+        {
+            public string name { get; set; } = string.Empty;
+            public string browser_download_url { get; set; } = string.Empty;
         }
     }
 }
