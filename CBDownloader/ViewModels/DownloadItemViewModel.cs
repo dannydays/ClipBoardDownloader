@@ -26,9 +26,11 @@ namespace CBDownloader.ViewModels
         private string _downloadStatus = "Pending...";
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(ShowRetry))]
         private bool _isDownloading;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(ShowRetry))]
         private bool _isCompleted;
         
         [ObservableProperty]
@@ -38,6 +40,8 @@ namespace CBDownloader.ViewModels
         public string? PlaylistName { get; set; }
         
         public string? FilePath { get; private set; }
+
+        public bool ShowRetry => !IsDownloading && !IsCompleted;
 
         public DownloadItemViewModel(YoutubeDLService ytdlService)
         {
@@ -57,6 +61,8 @@ namespace CBDownloader.ViewModels
 
             var progress = new Progress<DownloadProgress>(p =>
             {
+                if (_cts != null && _cts.IsCancellationRequested) return;
+
                 var stateStr = p.State.ToString();
                 if (stateStr == "Downloading" && !_isPostProcessing)
                 {
@@ -93,6 +99,12 @@ namespace CBDownloader.ViewModels
                 var result = await _ytdlService.DownloadAsync(VideoUrl, IsVideo, true, progress, _cts.Token, PlaylistName);
                 _isPostProcessing = false;
                 
+                if (_cts.IsCancellationRequested)
+                {
+                    DownloadStatus = "Cancelled.";
+                    return;
+                }
+                
                 if (result.Success)
                 {
                     FilePath = result.Data;
@@ -115,7 +127,14 @@ namespace CBDownloader.ViewModels
             catch (Exception ex)
             {
                 _isPostProcessing = false;
-                DownloadStatus = $"Error: {ex.Message}";
+                if (_cts != null && _cts.IsCancellationRequested)
+                {
+                    DownloadStatus = "Cancelled.";
+                }
+                else
+                {
+                    DownloadStatus = $"Error: {ex.Message}";
+                }
             }
             finally
             {
@@ -130,7 +149,24 @@ namespace CBDownloader.ViewModels
             if (IsDownloading)
             {
                 _cts?.Cancel();
+                DownloadStatus = "Cancelled.";
+                IsDownloading = false;
+                DownloadProgress = 0;
             }
+        }
+
+        [RelayCommand]
+        private void RetryVideo()
+        {
+            IsVideo = true;
+            _ = StartDownloadAsync();
+        }
+
+        [RelayCommand]
+        private void RetryAudio()
+        {
+            IsVideo = false;
+            _ = StartDownloadAsync();
         }
 
         [RelayCommand]

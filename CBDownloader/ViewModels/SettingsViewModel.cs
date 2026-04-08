@@ -139,6 +139,9 @@ namespace CBDownloader.ViewModels
             }
         }
 
+        // Obsolete authentication commands removed
+
+
         [RelayCommand]
         private async Task CheckForUpdatesAsync()
         {

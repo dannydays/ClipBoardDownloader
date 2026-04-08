@@ -18,6 +18,7 @@ namespace CBDownloader
         private MainViewModel? _mainViewModel;
         private Forms.NotifyIcon? _notifyIcon;
         private EventWaitHandle? _showEvent;
+        private ExtensionServerService _extensionServer = new();
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -41,7 +42,14 @@ namespace CBDownloader
                             _mainWindow?.Show();
                             if (_mainWindow?.WindowState == WindowState.Minimized)
                                 _mainWindow.WindowState = WindowState.Normal;
-                            _mainWindow?.Activate();
+                            
+                            // Force foreground
+                            if (_mainWindow != null)
+                            {
+                                _mainWindow.Topmost = true;
+                                _mainWindow.Topmost = SettingsService.Current.AlwaysOnTop;
+                                _mainWindow.Activate();
+                            }
                         });
                     }
                 });
@@ -61,6 +69,8 @@ namespace CBDownloader
             ThemeManager.Initialize();
 
             SetupNotifyIcon();
+            
+            _extensionServer.Start();
 
             _clipboardMonitor = new ClipboardMonitorService();
             _clipboardMonitor.ClipboardUrlCopied += async (s, url) =>
@@ -72,8 +82,20 @@ namespace CBDownloader
 
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
                 {
+                    if (_mainWindow?.WindowState == WindowState.Minimized)
+                    {
+                        _mainWindow.WindowState = WindowState.Normal;
+                    }
                     _mainWindow?.Show();
-                    _mainWindow?.Activate();
+                    
+                    // Force foreground
+                    if (_mainWindow != null)
+                    {
+                        _mainWindow.Topmost = true;
+                        _mainWindow.Topmost = SettingsService.Current.AlwaysOnTop;
+                        _mainWindow.Activate();
+                    }
+                    
                     if (_mainViewModel != null) await _mainViewModel.InitializeAndFetchMetadata(url);
                 });
             };
@@ -214,6 +236,7 @@ namespace CBDownloader
 
         protected override void OnExit(ExitEventArgs e)
         {
+            _extensionServer?.Stop();
             _clipboardMonitor?.StopMonitoring();
             if (_notifyIcon != null)
             {

@@ -23,6 +23,7 @@ Name: "startup"; Description: "Start CBDownloader with Windows (Recommended)"; G
 
 [Files]
 Source: "CBDownloader\bin\Release\net8.0-windows\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "Extension\*"; DestDir: "{app}\Extension"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\CBDownloader"; Filename: "{app}\CBDownloader.exe"

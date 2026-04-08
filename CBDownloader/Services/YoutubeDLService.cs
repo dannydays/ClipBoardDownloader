@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 using YoutubeDLSharp;
@@ -19,6 +20,12 @@ namespace CBDownloader.Services
             var binFolder = Path.Combine(appData, "CBDownloader", "bin");
             if (!Directory.Exists(binFolder)) Directory.CreateDirectory(binFolder);
 
+            var path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+            if (!path.Contains(binFolder))
+            {
+                Environment.SetEnvironmentVariable("PATH", binFolder + ";" + path);
+            }
+
             _ytdl = new YoutubeDL
             {
                 YoutubeDLPath = Path.Combine(binFolder, "yt-dlp.exe"),
@@ -31,6 +38,11 @@ namespace CBDownloader.Services
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var binFolder = Path.Combine(appData, "CBDownloader", "bin");
 
+            if (!File.Exists(Path.Combine(binFolder, "deno.exe")))
+            {
+                await DownloadDenoAsync(binFolder);
+            }
+
             if (!File.Exists(_ytdl.YoutubeDLPath))
             {
                 await Utils.DownloadYtDlp(binFolder);
@@ -39,21 +51,112 @@ namespace CBDownloader.Services
             {
                 await Utils.DownloadFFmpeg(binFolder);
             }
+
+            await TryUpdateYtDlpAsync();
+        }
+
+        private async Task DownloadDenoAsync(string binFolder)
+        {
+            var denoPath = Path.Combine(binFolder, "deno.exe");
+            if (File.Exists(denoPath)) return;
+
+            var zipPath = Path.Combine(binFolder, "deno.zip");
+            try
+            {
+                string url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip";
+                using (var client = new System.Net.Http.HttpClient())
+                {
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("CBDownloader");
+                    var response = await client.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+                    using (var fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        await response.Content.CopyToAsync(fs);
+                    }
+                }
+
+                ZipFile.ExtractToDirectory(zipPath, binFolder, true);
+            }
+            finally
+            {
+                if (File.Exists(zipPath)) File.Delete(zipPath);
+            }
+        }
+
+        private async Task TryUpdateYtDlpAsync()
+        {
+            try
+            {
+                var process = new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = _ytdl.YoutubeDLPath,
+                        Arguments = "-U",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    }
+                };
+                process.Start();
+                await process.WaitForExitAsync();
+            }
+            catch { }
+        }
+
+        private OptionSet? GetCookieOptions(string url)
+        {
+            if (!SettingsService.Current.UseBrowserCookies)
+                return null;
+
+            var options = new OptionSet();
+            
+            var binFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CBDownloader", "bin");
+            var txtCookiesPath = Path.Combine(binFolder, "youtube_cookies.txt");
+            
+            // App-Bound encryption breaks --cookies-from-browser for chromium browsers, 
+            // so we now always rely on the extension's exported cookies file for ALL sites.
+            if (File.Exists(txtCookiesPath))
+            {
+                options.AddCustomOption("--cookies", $"\"{txtCookiesPath}\"");
+            }
+            
+            return options;
         }
 
         public async Task<YoutubeDLSharp.Metadata.VideoData> GetVideoMetadataAsync(string url)
         {
             var res = await _ytdl.RunVideoDataFetch(url);
             if (res.Success)
-            {
                 return res.Data;
+
+            var cookieOpts = GetCookieOptions(url);
+            if (cookieOpts != null)
+            {
+                res = await _ytdl.RunVideoDataFetch(url, overrideOptions: cookieOpts);
+                if (res.Success)
+                    return res.Data;
             }
+
             throw new Exception($"Failed to fetch metadata: {string.Join("\n", res.ErrorOutput)}");
         }
 
         public async Task<(string PlaylistTitle, List<PlaylistItemModel> Items)> GetPlaylistMetadataAsync(string url)
         {
             var options = new OptionSet { YesPlaylist = true };
+            
+            if (SettingsService.Current.UseBrowserCookies)
+            {
+                var binFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CBDownloader", "bin");
+                var txtCookiesPath = Path.Combine(binFolder, "youtube_cookies.txt");
+                
+                if (File.Exists(txtCookiesPath))
+                {
+                    options.AddCustomOption("--cookies", $"\"{txtCookiesPath}\"");
+                }
+            }
+
             var res = await _ytdl.RunVideoDataFetch(url, flat: true, overrideOptions: options);
 
             if (!res.Success)
@@ -91,7 +194,7 @@ namespace CBDownloader.Services
 
         public async Task<RunResult<string>> DownloadAsync(string url, bool isVideo, bool accelerate, IProgress<DownloadProgress> progress, CancellationToken ct, string? playlistName = null)
         {
-            var baseFolder = CBDownloader.Services.SettingsService.Current.DownloadFolderPath;
+            var baseFolder = SettingsService.Current.DownloadFolderPath;
             var subFolder = isVideo ? "Videos" : "Audios";
             var finalOutputFolder = Path.Combine(baseFolder, subFolder);
 
@@ -108,7 +211,6 @@ namespace CBDownloader.Services
 
             _ytdl.OutputFolder = finalOutputFolder;
 
-            // Strategy: First try without cookies, if fails and cookies are enabled, try with cookies.
             var options = new OptionSet();
             if (accelerate) options.ConcurrentFragments = 4;
             
@@ -119,15 +221,12 @@ namespace CBDownloader.Services
                 options.AudioQuality = 0;
             }
 
-            // Attempt 1: Anonymous (No cookies)
             var result = await RunDownloadWithRetry(url, isVideo, options, progress, ct);
             
-            // Attempt 2: With cookies if enabled and first attempt failed
-            if (!result.Success && CBDownloader.Services.SettingsService.Current.UseBrowserCookies)
+            if (!result.Success && SettingsService.Current.UseBrowserCookies)
             {
-                var cookieOptions = new OptionSet();
+                var cookieOptions = GetCookieOptions(url) ?? new OptionSet();
                 if (accelerate) cookieOptions.ConcurrentFragments = 4;
-                cookieOptions.AddCustomOption("--cookies-from-browser", CBDownloader.Services.SettingsService.Current.BrowserForCookies);
                 
                 if (!isVideo)
                 {

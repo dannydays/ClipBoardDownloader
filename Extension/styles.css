@@ -1,0 +1,91 @@
+/* CBD Inject Button Styles */
+
+.cbd-inject-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff !important;
+    color: #2ba24c !important;
+    border: 1px solid #2ba24c !important;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    z-index: 9999;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+/* Dark mode detection for YT/IG */
+html[dark] .cbd-inject-btn,
+[data-visual-completion] .cbd-inject-btn, /* Meta/IG common */
+body.w-dark-mode .cbd-inject-btn,
+[data-theme='dark'] .cbd-inject-btn {
+    background-color: #2F3136 !important;
+    color: #4CAF50 !important;
+    border-color: #4CAF50 !important;
+}
+
+.cbd-inject-btn:hover {
+    background-color: #4CAF50 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+}
+
+.cbd-inject-btn svg {
+    margin-right: 6px;
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.cbd-disabled {
+    background-color: #555555 !important;
+    border-color: #555555 !important;
+    color: #aaaaaa !important;
+    pointer-events: none;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.cbd-reels-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 0 16px 0 !important;
+    box-shadow: none !important;
+    color: #4CAF50 !important;
+}
+
+.cbd-reels-btn svg {
+    margin-right: 0 !important;
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
+}
+
+.cbd-reels-btn span {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.cbd-reels-btn:hover {
+    background-color: transparent !important;
+    color: #81C784 !important;
+    box-shadow: none !important;
+    transform: scale(1.1);
+}
+
+/* Instagram specific adjustments */
+.cbd-ig-container {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 10px;
+}

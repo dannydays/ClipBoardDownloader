@@ -1,49 +1,33 @@
 # CBDownloader 📥
 
-CBDownloader is a modern, lightweight Windows application designed to simplify downloading videos and audio from YouTube and Instagram. It automatically monitors your clipboard and triggers when a valid supported link is copied, providing a seamless download experience.
-
-![CBDownloader Cover](CBDownloader/Assets/cover.png)
-
-## 🖥️ Preview
+CBDownloader is a modern Windows application that automatically detects and downloads videos/audio from **YouTube** and **Instagram** when you copy a link.
 
 ![CBDownloader UI](CBDownloader/Assets/UI1.png)
 
 ## ✨ Features
 
-- **🌒 Modern Dark Mode**: High-quality aesthetic with full support for Light, Dark, and System-synced themes.
-- **📋 Smart Clipboard Monitoring**: Automatically detects YouTube and Instagram URLs as soon as you copy them.
-- **🔗 Concurrent Download Queue**: Multi-threaded queue that allows downloading multiple videos at once without blocking the UI.
-- **🖼️ Video & Audio Support**: Download high-quality video (MP4) or extract audio (MP3) with one click.
-- **⚡ Supercharged Downloads**: Optimized download speeds using concurrent fragment loading.
-- **🔄 Auto-Updates**: One-click check to ensure you're always using the latest version.
-- **🏠 System Tray Integration**: Runs quietly in the background; accessible via the system tray.
-- **🛠️ Self-Maintaining**: Automatically downloads and updates dependencies (`yt-dlp` and `ffmpeg`) as needed.
+- **🌒 Aesthetic Dark Mode**: Modern and clean interface.
+- **📋 Smart Monitoring**: Detects URLs from your clipboard automatically.
+- **🔗 Queue System**: Download multiple items simultaneously.
+- **🖼️ Video & Audio**: Save as high-quality MP4 or MP3.
+- **🛠️ Self-Maintaining**: Auto-updates dependencies (`yt-dlp` & `ffmpeg`).
+- **🏠 Background Mode**: Runs in the system tray for convenience.
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### 1. Application Installation
+1. Download the latest `CBDownloaderInstaller.exe` from the [Releases](https://github.com/dannydays/ClipBoardDownloader/releases) page.
+2. Run the installer and follow the instructions.
 
-- Windows 10 or 11 (64-bit)
+### 2. Browser Extension (REQUIRED ⚠️)
+The extension is **mandatory** to bypass download restrictions and bot detection. It automatically syncs session cookies to the desktop app and adds native download buttons for convenience.
 
-### Installation
-
-1. Download the latest installer from the [Releases](https://github.com/dannydays/ClipBoardDownloader/releases) page.
-2. Run `CBDownloaderInstaller.exe`.
-3. Choose whether you want the app to start with Windows.
-
-## 🛠️ Built With
-
-- **C# & WPF**: Modern Windows interface.
-- **MVVM Toolkit**: Clean and responsive architecture.
-- **YoutubeDLSharp**: Seamless integration with `yt-dlp`.
-- **Inno Setup**: Professional Windows installation logic.
-
-## 📂 Project Structure
-
-- `CBDownloader/`: Main application source code.
-- `installer.iss`: Script for generating the Windows installer.
-- `Assets/`: Graphic resources (Icons and images).
+1. Download the [CBDownloader_Extension.zip](https://github.com/dannydays/ClipBoardDownloader/releases/latest/download/CBDownloader_Extension.zip) from the latest Release.
+2. Extract the zip to a folder.
+3. Open `chrome://extensions` in your browser (Brave, Chrome, or Edge).
+4. Enable **Developer Mode**.
+5. Click **Load unpacked** and select the extension folder.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.

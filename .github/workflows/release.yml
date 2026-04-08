@@ -27,11 +27,16 @@ jobs:
       - name: Compile Inno Setup Installer
         run: iscc installer.iss # Windows runners have Inno Setup pre-installed in the PATH
 
+      - name: Zip Extension
+        run: Compress-Archive -Path Extension\* -DestinationPath Output/CBDownloader_Extension.zip
+
       - name: Create Release and Upload Output
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: Output/CBDownloaderInstaller.exe
+          files: |
+            Output/CBDownloaderInstaller.exe
+            Output/CBDownloader_Extension.zip
           name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false

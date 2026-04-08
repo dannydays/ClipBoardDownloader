@@ -18,6 +18,11 @@ namespace CBDownloader.ViewModels
         public ObservableCollection<DownloadItemViewModel> Downloads { get; } = new ObservableCollection<DownloadItemViewModel>();
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(DownloadVideoCommand))]
+        [NotifyCanExecuteChangedFor(nameof(DownloadAudioCommand))]
+        private bool _isBusy;
+
+        [ObservableProperty]
         private string _videoUrl = string.Empty;
 
         [ObservableProperty]
@@ -26,15 +31,13 @@ namespace CBDownloader.ViewModels
         [ObservableProperty]
         private string _videoThumbnailUrl = string.Empty;
 
-        [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(DownloadVideoCommand))]
-        [NotifyCanExecuteChangedFor(nameof(DownloadAudioCommand))]
-        private bool _isBusy;
-
         public bool IsTopmost => SettingsService.Current.AlwaysOnTop;
+
+        public static MainViewModel? Current { get; private set; }
 
         public MainViewModel()
         {
+            Current = this;
             _ytdlService = new YoutubeDLService();
         }
 
