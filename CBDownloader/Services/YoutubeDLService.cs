@@ -220,6 +220,10 @@ namespace CBDownloader.Services
                 options.AudioFormat = AudioConversionFormat.Mp3;
                 options.AudioQuality = 0;
             }
+            else
+            {
+                options.AddCustomOption("--recode-video", "mp4");
+            }
 
             var result = await RunDownloadWithRetry(url, isVideo, options, progress, ct);
             
@@ -234,6 +238,10 @@ namespace CBDownloader.Services
                     cookieOptions.AudioFormat = AudioConversionFormat.Mp3;
                     cookieOptions.AudioQuality = 0;
                 }
+                else
+                {
+                    cookieOptions.AddCustomOption("--recode-video", "mp4");
+                }
 
                 result = await RunDownloadWithRetry(url, isVideo, cookieOptions, progress, ct);
             }
@@ -245,7 +253,7 @@ namespace CBDownloader.Services
         {
             if (isVideo)
             {
-                return await _ytdl.RunVideoDownload(url, format: "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+                return await _ytdl.RunVideoDownload(url, format: "bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/bestvideo+bestaudio/best",
                     overrideOptions: options, progress: progress, ct: ct);
             }
             else
