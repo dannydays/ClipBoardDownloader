@@ -7,14 +7,18 @@ using System.Threading.Tasks;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 using CBDownloader.Models;
+using CBDownloader.Utils;
 
 namespace CBDownloader.Services
 {
-    public class YoutubeDLService
+    public class MediaDownloadService
     {
+        private const string CookieFileName = "cookies.txt";
+        private const string LegacyCookieFileName = "youtube_cookies.txt";
+
         private readonly YoutubeDL _ytdl;
 
-        public YoutubeDLService()
+        public MediaDownloadService()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var binFolder = Path.Combine(appData, "CBDownloader", "bin");
@@ -31,6 +35,8 @@ namespace CBDownloader.Services
                 YoutubeDLPath = Path.Combine(binFolder, "yt-dlp.exe"),
                 FFmpegPath = Path.Combine(binFolder, "ffmpeg.exe")
             };
+
+            MigrateLegacyCookieFile(binFolder);
         }
 
         public async Task EnsureBinariesExist()
@@ -105,6 +111,21 @@ namespace CBDownloader.Services
             catch { }
         }
 
+        private static void MigrateLegacyCookieFile(string binFolder)
+        {
+            var legacyPath = Path.Combine(binFolder, LegacyCookieFileName);
+            var newPath = Path.Combine(binFolder, CookieFileName);
+
+            if (File.Exists(legacyPath) && !File.Exists(newPath))
+            {
+                File.Move(legacyPath, newPath);
+            }
+            else if (File.Exists(legacyPath) && File.Exists(newPath))
+            {
+                File.Delete(legacyPath);
+            }
+        }
+
         private OptionSet? GetCookieOptions(string url)
         {
             if (!SettingsService.Current.UseBrowserCookies)
@@ -113,13 +134,13 @@ namespace CBDownloader.Services
             var options = new OptionSet();
             
             var binFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CBDownloader", "bin");
-            var txtCookiesPath = Path.Combine(binFolder, "youtube_cookies.txt");
+            var cookiesPath = Path.Combine(binFolder, CookieFileName);
             
             // App-Bound encryption breaks --cookies-from-browser for chromium browsers, 
             // so we now always rely on the extension's exported cookies file for ALL sites.
-            if (File.Exists(txtCookiesPath))
+            if (File.Exists(cookiesPath))
             {
-                options.AddCustomOption("--cookies", $"\"{txtCookiesPath}\"");
+                options.AddCustomOption("--cookies", $"\"{cookiesPath}\"");
             }
             
             return options;
@@ -127,6 +148,8 @@ namespace CBDownloader.Services
 
         public async Task<YoutubeDLSharp.Metadata.VideoData> GetVideoMetadataAsync(string url)
         {
+            url = RegexHelper.NormalizeUrl(url);
+
             var res = await _ytdl.RunVideoDataFetch(url);
             if (res.Success)
                 return res.Data;
@@ -144,16 +167,18 @@ namespace CBDownloader.Services
 
         public async Task<(string PlaylistTitle, List<PlaylistItemModel> Items)> GetPlaylistMetadataAsync(string url)
         {
+            url = RegexHelper.NormalizeUrl(url);
+
             var options = new OptionSet { YesPlaylist = true };
             
             if (SettingsService.Current.UseBrowserCookies)
             {
                 var binFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CBDownloader", "bin");
-                var txtCookiesPath = Path.Combine(binFolder, "youtube_cookies.txt");
+                var cookiesPath = Path.Combine(binFolder, CookieFileName);
                 
-                if (File.Exists(txtCookiesPath))
+                if (File.Exists(cookiesPath))
                 {
-                    options.AddCustomOption("--cookies", $"\"{txtCookiesPath}\"");
+                    options.AddCustomOption("--cookies", $"\"{cookiesPath}\"");
                 }
             }
 
@@ -194,6 +219,8 @@ namespace CBDownloader.Services
 
         public async Task<RunResult<string>> DownloadAsync(string url, bool isVideo, bool accelerate, IProgress<DownloadProgress> progress, CancellationToken ct, string? playlistName = null)
         {
+            url = RegexHelper.NormalizeUrl(url);
+
             var baseFolder = SettingsService.Current.DownloadFolderPath;
             var subFolder = isVideo ? "Videos" : "Audios";
             var finalOutputFolder = Path.Combine(baseFolder, subFolder);

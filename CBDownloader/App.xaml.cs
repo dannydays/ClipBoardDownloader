@@ -187,7 +187,7 @@ namespace CBDownloader
             });
         }
 
-        internal void ShowPlaylistWindow(YoutubeDLService ytdlService, string url, string playlistTitle, bool isVideo)
+        internal void ShowPlaylistWindow(MediaDownloadService mediaService, string url, string playlistTitle, bool isVideo)
         {
             Dispatcher.Invoke(() =>
             {
@@ -211,7 +211,7 @@ namespace CBDownloader
                 {
                     try
                     {
-                        var result = await ytdlService.GetPlaylistMetadataAsync(url);
+                        var result = await mediaService.GetPlaylistMetadataAsync(url);
                         Dispatcher.Invoke(() => vm.LoadEntries(result.PlaylistTitle, result.Items));
                     }
                     catch (Exception ex)

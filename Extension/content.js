@@ -111,16 +111,74 @@ function handleInstagram() {
     });
 }
 
-const observer = new MutationObserver((mutations) => {
-    if (window.location.hostname.includes('youtube.com')) {
-        handleYouTube();
-    } else if (window.location.hostname.includes('instagram.com')) {
-        handleInstagram();
+function handleTikTok() {
+    // TikTok video pages — inject button near action bar
+    const actionContainers = document.querySelectorAll('[data-e2e="like-icon"], [data-e2e="browse-like-icon"]');
+    
+    actionContainers.forEach(container => {
+        const actionColumn = container.closest('[class*="ActionBar"]') || container.parentElement?.parentElement;
+        if (!actionColumn || actionColumn.dataset.cbdInjected) return;
+        
+        const btnContainer = document.createElement('div');
+        btnContainer.className = 'cbd-tiktok-container';
+        btnContainer.appendChild(createCBDButton('dynamic', 'reels'));
+        
+        actionColumn.appendChild(btnContainer);
+        actionColumn.dataset.cbdInjected = "true";
+    });
+
+    // Fallback: show floating button on any TikTok video page
+    if (window.location.pathname.includes('/video/') || window.location.pathname.startsWith('/@')) {
+        injectFloatingButton();
     }
+}
+
+function handleGenericSite() {
+    injectFloatingButton();
+}
+
+function injectFloatingButton() {
+    if (document.querySelector('.cbd-floating-btn')) return;
+    
+    const btn = document.createElement('button');
+    btn.className = 'cbd-floating-btn';
+    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>`;
+    btn.title = "Download with CBDownloader";
+    
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const url = window.location.href;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `⏳`;
+        
+        navigator.clipboard.writeText(url).catch(err => {});
+        
+        chrome.runtime.sendMessage({ action: "download", url: url }, (response) => {
+            btn.innerHTML = `✅`;
+            setTimeout(() => btn.innerHTML = originalHtml, 2000);
+        });
+    });
+    
+    document.body.appendChild(btn);
+}
+
+const hostname = window.location.hostname;
+
+function getSiteHandler() {
+    if (hostname.includes('youtube.com')) return handleYouTube;
+    if (hostname.includes('instagram.com')) return handleInstagram;
+    if (hostname.includes('tiktok.com')) return handleTikTok;
+    return handleGenericSite;
+}
+
+const handler = getSiteHandler();
+
+const observer = new MutationObserver((mutations) => {
+    handler();
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
 
-if (window.location.hostname.includes('youtube.com')) handleYouTube();
-if (window.location.hostname.includes('instagram.com')) handleInstagram();
-
+handler();

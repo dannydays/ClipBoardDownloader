@@ -10,7 +10,7 @@ namespace CBDownloader.ViewModels
 {
     public partial class DownloadItemViewModel : ObservableObject
     {
-        private readonly YoutubeDLService _ytdlService;
+        private readonly MediaDownloadService _mediaService;
         private CancellationTokenSource? _cts;
 
         [ObservableProperty]
@@ -43,9 +43,9 @@ namespace CBDownloader.ViewModels
 
         public bool ShowRetry => !IsDownloading && !IsCompleted;
 
-        public DownloadItemViewModel(YoutubeDLService ytdlService)
+        public DownloadItemViewModel(MediaDownloadService mediaService)
         {
-            _ytdlService = ytdlService;
+            _mediaService = mediaService;
         }
 
         private bool _isPostProcessing;
@@ -96,7 +96,7 @@ namespace CBDownloader.ViewModels
 
             try
             {
-                var result = await _ytdlService.DownloadAsync(VideoUrl, IsVideo, true, progress, _cts.Token, PlaylistName);
+                var result = await _mediaService.DownloadAsync(VideoUrl, IsVideo, true, progress, _cts.Token, PlaylistName);
                 _isPostProcessing = false;
                 
                 if (_cts.IsCancellationRequested)

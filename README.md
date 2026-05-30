@@ -1,6 +1,6 @@
 # CBDownloader 📥
 
-CBDownloader is a modern Windows application that automatically detects and downloads videos/audio from **YouTube** and **Instagram** when you copy a link.
+CBDownloader is a modern Windows application that automatically detects and downloads videos/audio from **YouTube**, **Instagram**, **TikTok**, **Twitter/X**, **Vimeo** and [1700+ other sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md) when you copy a link.
 
 ![CBDownloader UI](CBDownloader/Assets/UI1.png)
 
@@ -10,6 +10,7 @@ CBDownloader is a modern Windows application that automatically detects and down
 - **📋 Smart Monitoring**: Detects URLs from your clipboard automatically.
 - **🔗 Queue System**: Download multiple items simultaneously.
 - **🖼️ Video & Audio**: Save as high-quality MP4 or MP3.
+- **🌐 Multi-Platform**: Supports YouTube, Instagram, TikTok, Twitter/X, Vimeo, Reddit, Facebook, Twitch, Dailymotion, SoundCloud and many more.
 - **🛠️ Self-Maintaining**: Auto-updates dependencies (`yt-dlp` & `ffmpeg`).
 - **🏠 Background Mode**: Runs in the system tray for convenience.
 

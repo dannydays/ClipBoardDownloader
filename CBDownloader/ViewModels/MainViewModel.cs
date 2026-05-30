@@ -13,7 +13,7 @@ namespace CBDownloader.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {
-        private readonly YoutubeDLService _ytdlService;
+        private readonly MediaDownloadService _mediaService;
 
         public ObservableCollection<DownloadItemViewModel> Downloads { get; } = new ObservableCollection<DownloadItemViewModel>();
 
@@ -38,27 +38,27 @@ namespace CBDownloader.ViewModels
         public MainViewModel()
         {
             Current = this;
-            _ytdlService = new YoutubeDLService();
+            _mediaService = new MediaDownloadService();
         }
 
         public async Task InitializeAndFetchMetadata(string url)
         {
-            url = Utils.RegexHelper.EnsureProtocol(url);
+            url = Utils.RegexHelper.NormalizeUrl(url);
             VideoUrl = url;
-            VideoTitle = "Fetching video information...";
+            VideoTitle = "Fetching media information...";
             VideoThumbnailUrl = string.Empty;
             IsBusy = true;
 
             try
             {
-                await _ytdlService.EnsureBinariesExist();
-                var metadata = await _ytdlService.GetVideoMetadataAsync(url);
+                await _mediaService.EnsureBinariesExist();
+                var metadata = await _mediaService.GetVideoMetadataAsync(url);
                 VideoTitle = metadata.Title;
                 VideoThumbnailUrl = metadata.Thumbnail;
             }
             catch (Exception)
             {
-                VideoTitle = "Ready for links (Instagram/YouTube)";
+                VideoTitle = "Ready for links";
             }
             finally
             {
@@ -88,7 +88,7 @@ namespace CBDownloader.ViewModels
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    ((App)System.Windows.Application.Current).ShowPlaylistWindow(_ytdlService, VideoUrl, VideoTitle, isVideo);
+                    ((App)System.Windows.Application.Current).ShowPlaylistWindow(_mediaService, VideoUrl, VideoTitle, isVideo);
                     return;
                 }
             }
@@ -98,7 +98,7 @@ namespace CBDownloader.ViewModels
 
         private void EnqueueSingleItem(string title, string thumbnailUrl, string url, bool isVideo, string? playlistName = null)
         {
-            var newItem = new DownloadItemViewModel(_ytdlService)
+            var newItem = new DownloadItemViewModel(_mediaService)
             {
                 VideoTitle = title,
                 VideoThumbnailUrl = thumbnailUrl,

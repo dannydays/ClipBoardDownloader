@@ -1,5 +1,27 @@
 const SERVER_URL = "http://127.0.0.1:44321/api/download";
 
+const SUPPORTED_DOMAINS = [
+  "youtube.com", "youtu.be",
+  "instagram.com",
+  "tiktok.com",
+  "twitter.com", "x.com",
+  "vimeo.com",
+  "facebook.com", "fb.watch",
+  "reddit.com",
+  "twitch.tv",
+  "dailymotion.com",
+  "soundcloud.com"
+];
+
+function isSupportedUrl(url) {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return SUPPORTED_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
+  } catch {
+    return false;
+  }
+}
+
 // Helper function to extract cookies and send to the server
 async function sendToApp(url) {
   try {
@@ -27,8 +49,7 @@ chrome.action.onClicked.addListener((tab) => {
 // Automatically trigger background sync when a user opens/switches to a supported tab
 // This guarantees the desktop app always has fresh cookies even if the user just copies via Ctrl+C
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url && 
-      (tab.url.includes("youtube.com") || tab.url.includes("youtu.be") || tab.url.includes("instagram.com"))) {
+  if (changeInfo.status === 'complete' && tab.url && isSupportedUrl(tab.url)) {
     syncCookies(tab.url);
   }
 });

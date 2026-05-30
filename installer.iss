@@ -1,6 +1,6 @@
 [Setup]
 AppName=CBDownloader
-AppVersion=1.3.2
+AppVersion=1.4.2
 DefaultDirName={autopf}\CBDownloader
 DefaultGroupName=CBDownloader
 UninstallDisplayIcon={app}\CBDownloader.exe
@@ -11,7 +11,7 @@ OutputDir=Output
 OutputBaseFilename=CBDownloaderInstaller
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
-VersionInfoVersion=1.3.2.0
+VersionInfoVersion=1.4.2.0
 VersionInfoDescription=CBDownloader Installer
 VersionInfoCompany=ClipBoardDownloader
 VersionInfoCopyright=Copyright (C) 2026

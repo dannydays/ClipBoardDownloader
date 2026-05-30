@@ -89,3 +89,47 @@ body.w-dark-mode .cbd-inject-btn,
     align-items: center;
     margin-left: 10px;
 }
+
+/* TikTok specific adjustments */
+.cbd-tiktok-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 12px;
+}
+
+/* Floating button for generic sites */
+.cbd-floating-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2ba24c, #4CAF50) !important;
+    color: #ffffff !important;
+    border: none !important;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(43, 162, 76, 0.45);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    font-size: 20px;
+}
+
+.cbd-floating-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+.cbd-floating-btn:hover {
+    transform: scale(1.12);
+    box-shadow: 0 6px 24px rgba(43, 162, 76, 0.6);
+}
+
+.cbd-floating-btn:active {
+    transform: scale(0.95);
+}
