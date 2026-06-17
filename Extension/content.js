@@ -17,7 +17,13 @@ function createCBDButton(targetUrl, format = 'normal') {
         e.stopPropagation();
         if (btn.classList.contains('cbd-disabled')) return;
         
-        const finalUrl = targetUrl === 'dynamic' ? window.location.href : targetUrl;
+        let finalUrl = targetUrl;
+        if (targetUrl === 'dynamic') {
+            finalUrl = window.location.href;
+        } else if (targetUrl === 'dynamic-tiktok') {
+            finalUrl = findTikTokVideoUrl(btn);
+        }
+        
         const originalHtml = btn.innerHTML;
         btn.innerHTML = format === 'reels' ? `<span>Wait..</span>` : `Wait...`;
         
@@ -32,18 +38,49 @@ function createCBDButton(targetUrl, format = 'normal') {
     return btn;
 }
 
+function findTikTokVideoUrl(btn) {
+    const card = btn.closest('[data-e2e="recommend-list-item-container"], article');
+    
+    if (card) {
+        // 1. Try direct link inside this specific card
+        const link = card.querySelector('a[href*="/video/"], a[href*="/photo/"]');
+        if (link && link.href) {
+            return link.href;
+        }
+
+        // 2. Try extracting from player wrapper
+        const playerWrapper = card.querySelector('[id^="xgwrapper-"]');
+        const authorLink = card.querySelector('a[href^="/@"]');
+        
+        if (playerWrapper && authorLink) {
+            const wrapperId = playerWrapper.getAttribute('id');
+            const idParts = wrapperId.split('-');
+            const videoId = idParts[idParts.length - 1];
+            
+            const hrefAttr = authorLink.getAttribute('href');
+            const usernameMatch = hrefAttr.match(/@([a-zA-Z0-9_\.]+)/);
+            const username = usernameMatch ? `@${usernameMatch[1]}` : null;
+            
+            if (videoId && username) {
+                return `https://www.tiktok.com/${username}/video/${videoId}`;
+            }
+        }
+    }
+
+    return window.location.href;
+}
+
 function handleYouTube() {
     if (!window.location.pathname.startsWith('/watch') && !window.location.pathname.startsWith('/shorts/')) return;
     
-    const url = window.location.href;
     const menuContainer = document.querySelector('ytd-menu-renderer #top-level-buttons-computed');
     if (menuContainer && !menuContainer.querySelector('.cbd-inject-btn')) {
-        menuContainer.appendChild(createCBDButton(url));
+        menuContainer.appendChild(createCBDButton('dynamic'));
     }
     
     const shortsContainer = document.querySelector('ytd-shorts-player-controls #actions-inner');
     if (shortsContainer && !shortsContainer.querySelector('.cbd-inject-btn')) {
-        shortsContainer.appendChild(createCBDButton(url));
+        shortsContainer.appendChild(createCBDButton('dynamic'));
     }
 }
 
@@ -121,14 +158,14 @@ function handleTikTok() {
         
         const btnContainer = document.createElement('div');
         btnContainer.className = 'cbd-tiktok-container';
-        btnContainer.appendChild(createCBDButton('dynamic', 'reels'));
+        btnContainer.appendChild(createCBDButton('dynamic-tiktok', 'reels'));
         
         actionColumn.appendChild(btnContainer);
         actionColumn.dataset.cbdInjected = "true";
     });
 
     // Fallback: show floating button on any TikTok video page
-    if (window.location.pathname.includes('/video/') || window.location.pathname.startsWith('/@')) {
+    if (window.location.pathname.includes('/video/') || window.location.pathname.includes('/photo/')) {
         injectFloatingButton();
     }
 }
